@@ -1,114 +1,158 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// src/pages/index.js
+import { useState } from 'react';
+import InputField from '../components/InputField'; // Adjust path as needed
 
 export default function Home() {
-  return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [studentInformation, setStudentInformation] = useState([]);
+  const [newStudent, setNewStudent] = useState({
+    id: '',
+    name: '',
+    age: '',
+    gender: '',
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editStudentId, setEditStudentId] = useState(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewStudent((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // CREATE: Add a new student
+  const addStudent = () => {
+    if (newStudent.id && newStudent.name && newStudent.age && newStudent.gender) {
+      if (isEditing) {
+        // UPDATE: Edit existing student
+        setStudentInformation((prev) =>
+          prev.map((student) =>
+            student.id === editStudentId ? { ...newStudent } : student
+          )
+        );
+        setIsEditing(false);
+        setEditStudentId(null);
+      } else {
+        // Check for duplicate ID
+        if (studentInformation.some((student) => student.id === newStudent.id)) {
+          alert('A student with this ID already exists!');
+          return;
+        }
+        setStudentInformation((prev) => [...prev, newStudent]);
+      }
+      setNewStudent({ id: '', name: '', age: '', gender: '' }); // Reset form
+    } else {
+      alert('Please fill out all fields!');
+    }
+  };
+
+  // UPDATE: Populate form with student data for editing
+  const editStudent = (student) => {
+    setIsEditing(true);
+    setEditStudentId(student.id);
+    setNewStudent({ ...student });
+  };
+
+  // DELETE: Remove a student
+  const deleteStudent = (id) => {
+    if (confirm('Are you sure you want to delete this student?')) {
+      setStudentInformation((prev) => prev.filter((student) => student.id !== id));
+      // Reset form if deleting the student being edited
+      if (isEditing && editStudentId === id) {
+        setIsEditing(false);
+        setEditStudentId(null);
+        setNewStudent({ id: '', name: '', age: '', gender: '' });
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center min-h-screen p-8 gap-8">
+      {/* Student Form */}
+      <div className="w-96 p-6 rounded-lg shadow-md bg-white">
+        <h4 className="text-xl font-bold text-gray-800 mb-4 text-center">
+          {isEditing ? 'Edit Student' : 'Student Form'}
+        </h4>
+        <div className="grid grid-cols-2 gap-4">
+          <InputField
+            label="ID"
+            type="text"
+            name="id"
+            value={newStudent.id}
+            onChange={handleInputChange}
+            placeholder="Enter ID"
+            disabled={isEditing} // Prevent changing ID during edit
+          />
+          <InputField
+            label="Name"
+            name="name"
+            value={newStudent.name}
+            onChange={handleInputChange}
+            placeholder="Enter Name"
+          />
+          <InputField
+            label="Age"
+            type="number"
+            name="age"
+            value={newStudent.age}
+            onChange={handleInputChange}
+            placeholder="Enter Age"
+          />
+          <InputField
+            label="Gender"
+            name="gender"
+            value={newStudent.gender}
+            onChange={handleInputChange}
+            placeholder="Enter Gender"
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={addStudent}
+          className="mt-6 w-full p-2 bg-red-400 text-white rounded-md hover:bg-red-500 transition-colors"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          {isEditing ? 'Update Student' : 'Add Student'}
+        </button>
+      </div>
+
+      {/* Student Table */}
+      <div className="w-96 rounded-lg shadow-md overflow-hidden bg-white">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-red-400 text-white">
+              <th className="p-2 border-b border-red-200">ID</th>
+              <th className="p-2 border-b border-red-200">Name</th>
+              <th className="p-2 border-b border-red-200">Age</th>
+              <th className="p-2 border-b border-red-200">Gender</th>
+              <th className="p-2 border-b border-red-200">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {studentInformation.map((student, index) => (
+              <tr
+                key={student.id}
+                className={index % 2 === 0 ? 'bg-red-200' : 'bg-red-100'}
+              >
+                <td className="p-2 border-b border-red-200">{student.id}</td>
+                <td className="p-2 border-b border-red-200">{student.name}</td>
+                <td className="p-2 border-b border-red-200">{student.age}</td>
+                <td className="p-2 border-b border-red-200">{student.gender}</td>
+                <td className="p-2 border-b border-red-200 flex gap-2">
+                  <button
+                    onClick={() => editStudent(student)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteStudent(student.id)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
